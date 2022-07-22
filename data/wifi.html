@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Digital</title>
+</head>
+<body>
+	<div class="container">
+		<div class="header">
+			<h1>Система контроля</h1>
+			<h2>ESP8266</h2>
+			<a href="/">Главная</a>
+		</div>
+		<div id='add'>
+			<div>
+				<input type="text" id='ssid'>
+				<input type="text" id='password'>
+			</div>
+			<button onclick='addWiFi()'>Отправить</button>
+		</div>
+		<div id="info">
+		</div>
+	</div>
+</body>
+</html>
+<style>
+	body{width: 100%;}
+	*{margin: 0;padding: 0;box-sizing:border-box;}
+	.container{width: 83.3%;margin:0 auto;}
+	h1{text-align: center;font-size: 3rem;}
+	h2{text-align: center;margin-top:10px;}
+	#info,.header{margin:20px 0 30px;}
+	input{height:30px;line-height: 30px;font-size: 1.3rem;outline: none;margin-bottom:30px;}
+	#info{
+		align-self: center;
+	}
+	#add{
+		margin:10px 0;
+		display: flex;
+		justify-content: space-between;
+	}
+	#add button{
+		width:100px;
+		height:40px;
+		border: 4px solid blue;
+	}
+	.el{
+		display: flex;
+		justify-content: space-between;
+		border: 4px solid black;
+		padding: 10px;
+	}
+	.del{
+		width:100px;
+		height:40px;
+		color:#fff;
+		background: red;
+	}
+	</style>
+<script>
+pr=console.log;
+function deleteWiFi(el){
+	if(confirm('Вы уверены что хотите удалить файл?')){
+		ajax('/deleteWifi?',()=>{location.reload();});
+	}
+}
+function addWiFi(){
+	var p = document.getElementById('password').value;
+	var s = document.getElementById('ssid').value;
+	console.log(s,s.trim());
+	if(s && p && s.trim() && p.trim()){
+		return ajax('/addWiFi?p='+p+'&s='+s,(res)=>{
+			location.reload();
+		});
+	}
+	alert("Заполните полностью");
+}
+function ajax(path,next){
+	var xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = function() {
+	    if (this.readyState == 4 && this.status == 200) {
+			next(this.responseText);
+	    };
+	};
+	xhttp.open("GET", path, true);
+  	xhttp.send();
+}
+window.onload=function(){
+	ajax('/get?path=conf.txt',(res)=>{
+		var str='';
+		if(res){
+			var arrayOfStrings = res.split("\n");
+			pr(res,arrayOfStrings);
+			ps='';
+			for(var i =0;i<arrayOfStrings.length-1;i++){
+				ps = arrayOfStrings[i].split(";");
+				pr(arrayOfStrings[i],ps);
+				if(ps.length==2){
+					str+= '<div class=\'el\'><span>SSID: '+ps[0]+'; Password: '+ps[1]+'</span><button class=\'del\' onclick=\'deleteWiFi(this)\'>Удалить</button></div>';
+				}
+				
+			}
+		}
+		if(!str){str='<h3>Пусто</h3>'}
+		document.getElementById('info').innerHTML = str;
+	});
+};
+</script>
